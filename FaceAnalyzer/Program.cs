@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace blazorfacerec
+namespace FaceAnalyzer
 {
     public class Program
     {

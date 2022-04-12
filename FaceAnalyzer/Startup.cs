@@ -1,5 +1,4 @@
-﻿using FaceAnalyzer;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -11,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace blazorfacerec
+namespace FaceAnalyzer
 {
     public class Startup
     {
@@ -30,7 +29,7 @@ namespace blazorfacerec
             services.AddServerSideBlazor();
             //Create a config object for the api key 
             //injecting it to program
-            var config = new AppConfiguration { ApiKey = Configuration["FaceApiKey"]};
+            var config = new AppConfiguration {ApiKey = Configuration["FaceApiKey"]};
             services.AddSingleton<AppConfiguration>(config);                            //handles the exception for invalidOperationException
         }
 
