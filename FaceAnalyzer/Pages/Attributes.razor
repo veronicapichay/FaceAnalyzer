@@ -15,7 +15,7 @@ button on click calls the method to process the image -->
 
 <br />
 <br />
-<button @onclick="@ProcessImage">Process Image</button>
+<button @onclick="@ProcessImage">Analyze</button>
 <br />
 <br />
 
@@ -29,7 +29,7 @@ button on click calls the method to process the image -->
             <div class="col-md-8">
                 <h2>Analyzing...</h2>
                 <div style="float: left;">
-                    <img src="@ImageUrl" height="100" width="100" />
+                    <img src="@ImageUrl" height="200" width="200" />
                 </div>
                 <div style="margin-left: 30px; float: right;">
                     <ul>
@@ -37,7 +37,7 @@ button on click calls the method to process the image -->
                         <li><strong>Emotion:</strong> @face.TopEmotion</li>
                         <li><strong>Age:</strong> @face.FaceAttributes.Age</li>
                         <li><strong>Glasses:</strong> @face.FaceAttributes.Glasses</li>
-                        @*<li><strong>Facial Hair:</strong> @face.TopfacialHair</li>*@
+                        <li><strong>Gender: </strong>@face.FaceAttributes.Gender</li>
                         
                     </ul>
                 </div>
@@ -46,43 +46,12 @@ button on click calls the method to process the image -->
     }
 }
 
-
 @code {
 
-
-    //json raw result
-    //"faceId": "54c7c5a6-5fe7-47ce-85f3-5c62248ba55a",
-    // "faceRectangle": {
-    //     "top": 130,
-    //     "left": 138,
-    //     "width": 174,
-    //     "height": 174
-    // },
-    // "faceAttributes": {
-    //     "smile": 0.953,
-    //     "age": 26.0,
-    //     "facialHair": {
-    //         "moustache": 0.1,
-    //         "beard": 0.1,
-    //         "sideburns": 0.1
-    //     },
-    //     "glasses": "NoGlasses",
-    //     "emotion": {
-    //         "anger": 0.0,
-    //         "contempt": 0.028,
-    //         "disgust": 0.0,
-    //         "fear": 0.0,
-    //         "happiness": 0.953,
-    //         "neutral": 0.019,
-    //         "sadness": 0.0,
-    //         "surprise": 0.0
-    //     }
-
-    //properties
-    private readonly string _baseUrl = "https://faceanalyzer.cognitiveservices.azure.com/";         //url endpoint in your azure face api account 
+    private readonly string _baseUrl = "https://analyzemyface.cognitiveservices.azure.com/";         //url endpoint in your azure face api account 
     private string ImageUrl { get; set; }
-    private Face[] _tmpfaces;                                                                        
-    private List<Face> _faces;                                                                      //list of faces
+    private Face[] _tmpfaces;
+    private List<Face> _faces;                                                                     //list of faces
 
 
     //API Key injection
@@ -96,12 +65,14 @@ button on click calls the method to process the image -->
         _faces = new List<Face>();                  //temp list of faces 
 
         //create http client request 
-        HttpClient client = new HttpClient { BaseAddress = new Uri(_baseUrl + "/face/v1.0/detect?returnFaceLandmarks=true&returnFaceAttributes=age,emotion,facialHair,glasses")};
+        HttpClient client = new HttpClient { BaseAddress = new Uri(_baseUrl + "/face/v1.0/detect?returnFaceAttributes=age,glasses,emotion,gender&ReturnFaceLandmarks=true") };
         HttpResponseMessage response = null;
 
         //input image url 
         var payload = new DataPayLoad { Url = ImageUrl };
-        var payloadString = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), Encoding.UTF8, MediaTypeNames.Application.Json);        //object to string conversion //adds the headers to the api call
+
+        //object to string conversion //adds the headers to the api call
+        var payloadString = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), Encoding.UTF8, MediaTypeNames.Application.Json);       
 
         //azure subscription key as local secret that is added to the header
         client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", _config.ApiKey);
@@ -115,8 +86,11 @@ button on click calls the method to process the image -->
         {
             var content = await response.Content.ReadAsStringAsync();
             _tmpfaces = JsonSerializer.Deserialize<Face[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+
+            ProcessEmotions();
+
         }
-        ProcessEmotions();
 
     }
 
@@ -136,9 +110,7 @@ button on click calls the method to process the image -->
                 {"Neutral", face.FaceAttributes.Emotion.Neutral},
                 {"Sadness", face.FaceAttributes.Emotion.Sadness},
                 {"Surprise", face.FaceAttributes.Emotion.Surprise},
-                {"Moustache", face.FaceAttributes.FacialHair.Moustache},
-                {"Beard", face.FaceAttributes.FacialHair.Beard},
-                {"Sideburns", face.FaceAttributes.FacialHair.Sideburns}
+
             };
 
             float topValue = 0;
@@ -161,39 +133,6 @@ button on click calls the method to process the image -->
         }
     }
 
-    //public void ProcessFacialHair()
-    //{
-    //    foreach (Face face in _tmpfaces)
-    //    {
-    //        //dictionary to store the names and values of the emotions 
-    //        var facialHairValues = new Dictionary<string, float> 
-    //        {
-    //            {"Moustache", face.FaceAttributes.FacialHair.Moustache},
-    //            {"Beard", face.FaceAttributes.FacialHair.Beard},
-    //            {"Sideburns", face.FaceAttributes.FacialHair.Sideburns}
-    //        };
-
-    //        float topValue = 0;
-    //        string topValueName = "";
-
-    //        foreach (var facialhair in facialHairValues)
-    //        {
-    //            Console.WriteLine("Key: " + facialhair.Key + "Value: " + facialhair.Value);
-
-    //            if (facialhair.Value > topValue)
-    //            {
-    //                topValue = facialhair.Value;
-    //                topValueName = facialhair.Key;
-    //            }
-    //        }
-    //        //face object and adding it to the face collection 
-    //        Face ourFace = new Face { FaceId = face.FaceId, FaceAttributes = face.FaceAttributes, TopfacialHair = topValueName };
-    //        _faces.Add(ourFace);
-    //    }
-    //}
-
-    //data from azure
-    //raw url string from postman to azure to get attributes
     public class DataPayLoad
     {
 
@@ -208,9 +147,7 @@ button on click calls the method to process the image -->
         public Emotion Emotion { get; set; }
         public float Age { get; set; }
         public string Glasses { get; set; }
-        public FacialHair FacialHair { get; set; }
-        public bool Occlusion { get; set; }
-
+        public string Gender { get; set; }
     }
 
     //highest rated emotion based on azure api results
@@ -240,7 +177,6 @@ button on click calls the method to process the image -->
         public Guid FaceId { get; set; }
         public FaceAttribute FaceAttributes { get; set; }
         public string TopEmotion { get; set; }
-        public string TopfacialHair { get; set; }
     }
 
   }

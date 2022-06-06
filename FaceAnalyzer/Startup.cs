@@ -1,4 +1,17 @@
-﻿namespace FaceAnalyzer
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+
+namespace FaceAnalyzer
 {
     public class Startup
     {
@@ -15,10 +28,10 @@
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
             //Create a config object for the api key 
-            //injecting it to program
             var config = new AppConfiguration {ApiKey = Configuration["FaceApiKey"]};
-            services.AddSingleton<AppConfiguration>(config);                            //handles the exception for invalidOperationException
+            services.AddSingleton<AppConfiguration>(config);  //handles the exception for invalidOperationException
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
